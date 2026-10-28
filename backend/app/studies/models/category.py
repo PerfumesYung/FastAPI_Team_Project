@@ -1,5 +1,19 @@
-"""study_categories 테이블: 카테고리.
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 
-TODO: app.db.database.Base를 상속하여 ORM 모델을 작성하세요.
-테이블명·컬럼·FK·제약조건은 팀 합의 후 정합니다.
-"""
+from app.db.database import Base
+
+
+class StudyCategory(Base):
+    __tablename__ = "study_categories"
+
+    # 카테고리 번호
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # 카테고리명
+    # 예: Backend, Frontend, Algorithm
+    name: Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False,
+    )

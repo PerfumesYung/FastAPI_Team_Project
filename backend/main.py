@@ -1,20 +1,35 @@
-"""앱을 시작하고 각 담당자의 라우터를 연결하는 공통 파일입니다."""
 from fastapi import FastAPI
+
+# 각 담당자가 작업할 라우터 파일을 가져옴
 from app.auth.routes import users
 from app.studies.routes import studies, categories
 from app.members.routes import members
 from app.schedules.routes import schedules
 
-app = FastAPI(title="스터디 관리 API")
 
-# 라우터 틀만 연결했습니다. 각 API는 담당자가 해당 파일에서 구현합니다.
+# FastAPI 앱 생성
+app = FastAPI(
+    title="스터디 관리 API",
+)
+
+
+# 회원·인증
 app.include_router(users.router)
+app.include_router(users.auth_router)
+
+# 스터디·카테고리
 app.include_router(studies.router)
 app.include_router(categories.router)
+
+# 참가·내 참가 목록
 app.include_router(members.router)
+app.include_router(members.my_studies_router)
+
+# 일정
 app.include_router(schedules.router)
 
+
+# 서버 상태 확인
 @app.get("/health", tags=["공통"])
 def health():
-    """앱의 기본 상태 확인용 경로입니다."""
     return {"status": "ok"}

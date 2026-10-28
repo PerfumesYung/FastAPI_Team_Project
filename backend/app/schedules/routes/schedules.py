@@ -1,8 +1,47 @@
-"""스터디 일정 등록·조회 등 합의한 기능
+from fastapi import APIRouter, HTTPException
 
-TODO: router에 필요한 API를 추가하세요.
-DB 세션이 필요한 경로는 app.db.database.get_db를 사용합니다.
-"""
-from fastapi import APIRouter
 
-router = APIRouter(prefix="/studies", tags=["일정"])
+router = APIRouter(
+    prefix="/studies",
+    tags=["일정"],
+)
+
+
+# 스터디 일정 목록 조회
+# GET /studies/1/schedules
+@router.get("/{study_id}/schedules")
+def read_schedules(study_id: int):
+    raise HTTPException(
+        status_code=501,
+        detail="일정 목록 조회 기능 구현 예정",
+    )
+
+
+# 스터디 일정 등록
+# POST /studies/1/schedules
+@router.post("/{study_id}/schedules")
+def create_schedule(study_id: int):
+    raise HTTPException(
+        status_code=501,
+        detail="일정 등록 기능 구현 예정",
+    )
+
+
+# 스터디 일정 수정
+# PUT /studies/1/schedules/2
+@router.put("/{study_id}/schedules/{schedule_id}")
+def update_schedule(study_id: int, schedule_id: int):
+    raise HTTPException(
+        status_code=501,
+        detail="일정 수정 기능 구현 예정",
+    )
+
+
+# 스터디 일정 삭제
+# DELETE /studies/1/schedules/2
+@router.delete("/{study_id}/schedules/{schedule_id}")
+def delete_schedule(study_id: int, schedule_id: int):
+    raise HTTPException(
+        status_code=501,
+        detail="일정 삭제 기능 구현 예정",
+    )
