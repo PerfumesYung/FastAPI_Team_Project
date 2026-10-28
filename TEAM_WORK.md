@@ -1,69 +1,69 @@
 # 팀원별 작업 폴더 안내
 
-## 먼저 정할 것
+## 확정된 역할분담
 
-아래 배정은 **예시**입니다. 팀원 네 분이 각자의 희망·가능한 시간과 난이도를 확인한 뒤 이름과 역할을 정합니다. 팀장 직책과 DB·Git 같은 공통 기술 작업 담당은 분리할 수 있습니다.
+팀에서 확정한 역할을 기준으로 작업합니다. 공통 모델의 변경이나 기능 간 연결이 필요하면 관련 담당자와 먼저 조율합니다.
 
 | 작업 | 담당자 이름 | 주로 수정할 위치 | 할 일 |
 | --- | --- | --- | --- |
-| 회원·인증 | 미정 | `backend/app/auth/`, `backend/app/core/security.py` | users 모델, 회원가입·로그인·JWT·내 정보 |
-| 스터디·카테고리 | 미정 | `backend/app/studies/` | 모집글·카테고리 모델, CRUD, 검색 |
-| 참가·취소 | 미정 | `backend/app/members/` | 참가 모델, 참가·취소·목록·정원 확인 |
-| 일정 | 미정 | `backend/app/schedules/` | 일정 모델, 등록·조회 등 합의한 API |
-| 공통 구조·DB | 미정 | `backend/app/db/`, `backend/app/core/settings.py`, `backend/main.py` | DB 설정, 모델 등록, 공통 라우터 조립 |
-| Git·통합·제출 | 미정 | `.gitignore`, `requirements.txt`, `README.md`, 공통 문서 | PR 조율, 통합 확인, API 명세 취합 |
+| 회원·인증 | 아름 님 | `backend/app/auth/routes/`, `backend/app/auth/schemas/`, `backend/app/core/security.py` | 회원가입·로그인·JWT·내 정보·인증 검증 |
+| 스터디·카테고리 | 효정 님 | `backend/app/studies/routes/`, `backend/app/studies/schemas/` | 모집글 CRUD·검색·카테고리 |
+| 참가·취소 | 현하 님 | `backend/app/members/routes/`, `backend/app/members/schemas/` | 참가·취소·목록·정원 확인 |
+| 일정 | 효정 님 | `backend/app/schedules/routes/`, `backend/app/schedules/schemas/` | 일정 CRUD·권한 검증 |
+| 공통 구조·DB | 재영 님 | 각 `backend/app/*/models/`, `backend/app/db/`, `backend/app/core/settings.py`, `backend/main.py` | 공통 ORM 모델, DB 설정, 모델 등록, 라우터 연결 |
+| Git·통합·제출 | 재영 님 | `.gitignore`, `requirements.txt`, `README.md`, 공통 문서 | PR 조율·통합 확인·API 명세와 실행 결과 취합 |
 
-4명 팀이므로 한 사람이 여러 영역을 맡을 수 있습니다. **일정은 별도 폴더**로 두었으니 스터디 담당이나 희망하는 팀원이 맡을 수 있습니다. 공통 작업을 추가로 맡은 사람은 기능 범위를 함께 조정하세요. 사용자·스터디·참가 담당이 필요한 공통 항목과 FK를 먼저 맞춥니다.
+효정 님이 스터디와 일정을 함께 담당하며, 일정 코드는 별도의 `schedules/` 폴더에서 작업합니다. 공통 ORM 모델은 재영 님이 먼저 작성했습니다. 사용자·스터디·참가 담당은 필요한 공통 항목과 FK를 함께 확인합니다.
 
 ## 폴더 안에서 무엇을 하나요?
 
-- `models/`: SQLAlchemy ORM 클래스와 테이블·컬럼·FK를 작성합니다.
+- `models/`: 재영 님이 먼저 작성한 SQLAlchemy ORM 모델입니다. 테이블·컬럼·FK 변경이 필요하면 함께 조율합니다.
 - `schemas/`: Pydantic 요청·응답 모델을 작성합니다. 비밀번호 해시 등 비밀 정보는 응답에서 제외합니다.
 - `routes/`: FastAPI 경로를 작성합니다. 필요하면 `Depends(get_db)`로 DB 세션을 받습니다.
 - 각 담당자는 본인 기능의 API 명세와 입력·오류 처리도 함께 준비합니다.
 
-## 1. 회원·인증 담당
+## 1. 아름 님 — 회원·인증
 
-작업: `app/auth/models/user.py`, `app/auth/schemas/user.py`, `app/auth/routes/users.py`, `app/core/security.py`.
+작업: `app/auth/schemas/user.py`, `app/auth/routes/users.py`, `app/core/security.py`. 공통 모델 `app/auth/models/user.py`는 재영 님과 조율합니다.
 
-- `users` ORM 모델, 회원가입 요청·응답 모델을 작성합니다.
+- 공통 `users` ORM 모델을 사용하고 회원가입 요청·응답 모델을 작성합니다.
 - 비밀번호 해시, OAuth2 로그인, JWT 발급·검증, 현재 사용자 확인을 구현합니다.
 - 로그인 경로와 OAuth2의 `tokenUrl`을 같게 맞추고, 빈 `SECRET_KEY`를 거부합니다.
 - 다른 담당자가 사용할 로그인 사용자 의존성의 import 경로를 팀에 공유합니다.
 
-## 2. 스터디·카테고리 담당
+## 2. 효정 님 — 스터디·카테고리
 
-작업: `app/studies/models/`, `app/studies/schemas/`, `app/studies/routes/`.
+작업: `app/studies/schemas/`, `app/studies/routes/`. 공통 모델 변경은 재영 님과 조율합니다.
 
-- `study_groups`, `study_categories` 모델과 관련 Pydantic 모델을 작성합니다.
+- 공통 `study_groups`, `study_categories` 모델을 사용하고 관련 Pydantic 모델을 작성합니다.
 - 스터디 생성·조회·상세·수정·삭제, 검색과 카테고리 조회를 구현합니다.
 - 상세 경로의 Path, 검색 Query, 생성·수정 Request Body를 명세에 적습니다.
 - 작성자만 수정·삭제하도록 인증 담당과 의존성을 맞춥니다.
 
-## 3. 참가·취소 담당
+## 3. 현하 님 — 참가·취소
 
-작업: `app/members/models/member.py`, `app/members/schemas/member.py`, `app/members/routes/members.py`.
+작업: `app/members/schemas/member.py`, `app/members/routes/members.py`. 공통 모델 변경은 재영 님과 조율합니다.
 
-- `study_members` 모델과 참가·취소·참가자 목록을 작성합니다.
+- 공통 `study_members` 모델을 사용하고 참가·취소·참가자 목록을 구현합니다.
 - 중복 참가·모집 상태·정원 확인 규칙을 팀과 정합니다.
-- 내 참가 목록의 경로와 담당 파일은 인증 담당과 합의합니다. 현재 참가 라우터에는 `/studies` 접두사가 있으므로 `/users/me/studies` 경로를 만든다면 해당 접두사와 충돌하지 않도록 별도 라우터를 사용하고 공통 구조 담당자에게 등록을 요청하세요.
+- 내 참가 목록은 `members.py`의 `my_studies_router`에 `/users/me/studies` 경로 틀이 이미 연결되어 있습니다. 인증 담당과 로그인 사용자 확인 방법을 맞춥니다.
 - 정원 확인 후 참가하는 단순 구현은 동시에 여러 요청이 오면 초과할 수 있습니다. 동시 요청까지 다룰지 팀에서 범위를 결정하고 지원 담당을 정합니다.
 
-## 4. 일정 담당
+## 4. 효정 님 — 일정
 
-작업: `app/schedules/models/schedule.py`, `app/schedules/schemas/schedule.py`, `app/schedules/routes/schedules.py`.
+작업: `app/schedules/schemas/schedule.py`, `app/schedules/routes/schedules.py`. 공통 모델 변경은 재영 님과 조율합니다.
 
-- `study_schedules` 모델과 일정 등록·조회 API를 작성합니다.
-- 일정 수정·삭제와 날짜·시간대 규칙은 팀과 합의한 범위에 따라 추가합니다.
+- 공통 `study_schedules` 모델을 사용하고 일정 등록·조회·수정·삭제 API를 작성합니다.
+- 날짜·시간대 규칙은 팀과 합의합니다.
 - `study_id` 외래키와 작성자 권한 확인 방법을 스터디·인증 담당과 맞춥니다.
 
-## 5. 공통 구조·DB 담당
+## 5. 재영 님 — 공통 구조·DB
 
 작업: `app/db/`, `app/core/settings.py`, `main.py`, `.env.example`, `requirements.txt`.
 
 - 각 모델의 테이블명·PK·FK·자료형과 제약을 팀원과 함께 확인합니다.
-- 각자 모델을 작성한 뒤 `app/db/model_registry.py`에서 import하고, 팀이 선택한 테이블 생성 또는 마이그레이션 방식을 연결합니다. **이 뼈대는 자동으로 테이블을 만들지 않습니다.**
-- 모델 간 문자열 FK와 import 경로를 맞추고, 팀원이 새 라우터를 만들면 `main.py`에 등록합니다. 기존 빈 라우터는 이미 연결되어 있습니다.
+- 공통 모델은 `app/db/model_registry.py`에 import되어 있습니다. 팀이 선택한 테이블 생성 방식을 연결합니다. **이 뼈대는 자동으로 테이블을 만들지 않습니다.**
+- 모델 간 문자열 FK와 import 경로를 맞추고, 팀원이 새 라우터를 만들면 `main.py`에 등록합니다. 현재 기본 경로는 연결되어 있고 실제 기능은 `501 구현 예정` 상태입니다.
 - `main.py`와 공통 설정을 여러 명이 동시에 수정해야 한다면 담당자와 먼저 조율합니다.
 
 ## Git 충돌 줄이는 약속

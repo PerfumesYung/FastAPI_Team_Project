@@ -2,29 +2,27 @@
 
 이 문서는 공통으로 준비한 프로젝트 구조와 팀원별 후속 작업을 정리한 안내입니다. 현재 시점의 기록은 2026년 10월 29일 확인한 상태이며, 이후 작업이 진행되면 담당자가 갱신해 주세요.
 
-## 1. 현재 GitHub와 로컬 상태
+## 1. 현재 GitHub 상태
 
 ### GitHub `main`에 올라간 내용
 
 - 첫 커밋 `2c4f485`: 프로젝트 폴더, 기본 DB 연결 코드, 빈 모델·스키마·라우터 파일, `.gitignore`, `.env.example`, `README.md`, `TEAM_WORK.md`.
-- 첫 커밋의 라우터에는 `APIRouter` 틀만 있으며, `GET /health`를 제외한 기능 API는 구현되지 않았습니다.
-- 이 문서는 작성 시점에 아직 GitHub에 올라가지 않았습니다.
+- 커밋 `d26a102`: 공통 DB 모델, 모델 등록 코드, 기본 라우터 경로와 이 안내 문서를 추가했습니다.
+- 커밋 `47dd3bc`: `StudyMember` 모델을 `models/member.py`로 옮겼습니다.
+- 각 기능 라우터는 `501 구현 예정`을 반환하는 틀이며 실제 회원가입·로그인·CRUD 기능은 아직 구현되지 않았습니다.
 
-### 재영의 컴퓨터에서 작업 중인 내용
+### DB 모델 위치와 남은 확인
 
-- 공통 DB 모델 일부와 `model_registry.py`를 작성했습니다.
-- 각 기능 라우터에 경로와 `501 구현 예정` 응답을 추가하고 `main.py`에 라우터를 연결했습니다.
-- 위 변경은 확인 당시 아직 커밋·푸시되지 않았으므로, 팀원이 현재 GitHub에서 clone하거나 pull해도 보이지 않습니다.
-- 작성한 코드는 실행이나 DB 연결 검증을 하지 않았습니다. 실제 테이블 생성·기능 구현이 완료되었다는 뜻은 아닙니다.
+- `StudyMember` ORM 모델은 `backend/app/members/models/member.py`에 있으며 `model_registry.py`도 같은 위치에서 불러옵니다.
+- `backend/app/members/schemas/member.py`는 현하 님이 참가 요청·응답용 Pydantic 스키마를 작성할 자리입니다.
+- 5개 모델과 기본 라우터가 GitHub `main`에 올라가 있습니다. 실제 DB 연결·테이블 생성은 아직 검증되지 않았습니다.
+- SQLite를 사용하는 경우 외래키 기능을 활성화해야 모델의 `ON DELETE CASCADE`가 적용됩니다. MySQL에서도 실제 DB 설정을 확인해야 합니다.
 
-### 푸시 전에 확인할 사항
+### 작업할 때 확인할 사항
 
-**`StudyMember` 모델 위치를 확인해 주세요.** 확인 당시 모델 코드가 `backend/app/members/schemas/member.py`에 들어 있고, `backend/app/members/models/member.py`는 빈 틀입니다. 그런데 `model_registry.py`는 `app.members.models.member`에서 `StudyMember`를 가져옵니다. 이 상태에서는 모델 등록 파일을 import할 때 `StudyMember`를 찾지 못합니다.
-
-1. `schemas/member.py`에 작성한 `StudyMember` ORM 코드 전체를 `models/member.py`로 옮깁니다.
-2. `schemas/member.py`는 현하 님이 참가 요청·응답용 Pydantic 스키마를 작성할 자리입니다.
-3. 각 모델의 클래스명·컬럼명·외래키가 팀이 사용하는 테이블 정의서와 같은지 확인합니다.
-4. `git status`로 올릴 파일을 확인하고 실제 `.env`나 비밀번호가 포함되지 않았는지 확인합니다.
+1. 각 모델의 클래스명·컬럼명·외래키가 팀이 사용하는 테이블 정의서와 같은지 확인합니다.
+2. SQLite 또는 MySQL에서 외래키와 테이블 생성 방식을 확인합니다.
+3. `git status`로 올릴 파일을 확인하고 실제 `.env`나 비밀번호가 포함되지 않았는지 확인합니다.
 
 ## 2. 라우터는 어떻게 동작하나요?
 
@@ -126,6 +124,6 @@ def read_study(study_id: int):
 
 ## 6. 팀원이 코드를 받는 시점
 
-재영 님이 공통 모델·라우터와 이 문서를 확인한 뒤 GitHub `main`에 올리면, 팀원들은 그때 최신 코드를 받을 수 있습니다. 이미 저장소를 복제한 팀원은 현재 작업을 안전하게 저장한 뒤 최신 `main`을 가져오고, 자신의 작업 브랜치에 반영합니다.
+공통 모델과 기본 라우터는 GitHub `main`에 올라가 있으므로 팀원들이 저장소를 처음 복제하거나 최신 코드를 가져올 수 있습니다. 이미 저장소를 복제한 팀원은 현재 작업을 안전하게 저장한 뒤 최신 `main`을 가져오고, 자신의 작업 브랜치에 반영합니다.
 
 이 파일은 작업 안내이며, GitHub 반영 여부는 실제 커밋·푸시와 GitHub 저장소에서 확인해야 합니다.
