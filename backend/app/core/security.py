@@ -28,10 +28,12 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    #로그인 유저를 식별하기 위한 고유 JWT 액세스 토큰 발행
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    #현재 시간으로부터 1시간 뒤 만료 되게 설정
+    expire = datetime.utcnow() + timedelta(hours=1)
     to_encode.update({"exp": expire})
+    
+    #지정된 secret_key와 알고리즘으로 암호화해서 반환
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -46,12 +48,9 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
     #2. 만료된 토큰이면 HTTPException 발생
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="만료된 토큰입니다. 다시 로그인 해주세요.")
-    #3. 위조 및 변조된 토큰이면 HTTPException 발생
-    except JWTError:
-        raise HTTPException(status_code=401, detail="변조되거나 신뢰할 수 없는 토큰입니다.")
         
     user = db.query(User).filter(User.email == email).first()
-    #4. 토큰과 일치하는 사용자 정보 없으면 HTTPException 발생
+    #3. 토큰과 일치하는 사용자 정보 없으면 HTTPException 발생
     if user is None:
         raise HTTPException(status_code=401, detail="토큰과 일치하는 사용자 정보가 존재하지 않습니다.")
     return user
