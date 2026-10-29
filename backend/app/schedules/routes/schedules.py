@@ -1,47 +1,45 @@
-from fastapi import APIRouter, HTTPException
+"""경로 → 입력·인증 확인 → service → 응답 순서로 처리합니다."""
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Path, Response, status
+from sqlalchemy.orm import Session
+
+from app.auth.models.user import User
+from app.db.database import get_db
+from app.schedules import service
+from app.schedules.dependencies import get_schedule_user
+from app.schedules.schemas.schedule import ScheduleCreate, ScheduleRead, ScheduleUpdate
 
 
-router = APIRouter(
-    prefix="/studies",
-    tags=["일정"],
+router = APIRouter(prefix="/studies", tags=["일정"])
+PositiveId = Annotated[int, Path(gt=0)]
+Database = Annotated[Session, Depends(get_db)]
+CurrentUser = Annotated[User, Depends(get_schedule_user)]
+
+
+@router.get("/{study_id}/schedules", response_model=list[ScheduleRead])
+def read_schedules(study_id: PositiveId, db: Database):
+    return service.read_schedules(db, study_id)
+
+
+@router.post(
+    "/{study_id}/schedules",
+    response_model=ScheduleRead,
+    status_code=status.HTTP_201_CREATED,
 )
+def create_schedule(study_id: PositiveId, data: ScheduleCreate, db: Database, current_user: CurrentUser):
+    return service.create_schedule(db, study_id, data, current_user.id)
 
 
-# 스터디 일정 목록 조회
-# GET /studies/1/schedules
-@router.get("/{study_id}/schedules")
-def read_schedules(study_id: int):
-    raise HTTPException(
-        status_code=501,
-        detail="일정 목록 조회 기능 구현 예정",
-    )
+@router.put("/{study_id}/schedules/{schedule_id}", response_model=ScheduleRead)
+def update_schedule(
+    study_id: PositiveId, schedule_id: PositiveId, data: ScheduleUpdate,
+    db: Database, current_user: CurrentUser,
+):
+    return service.update_schedule(db, study_id, schedule_id, data, current_user.id)
 
 
-# 스터디 일정 등록
-# POST /studies/1/schedules
-@router.post("/{study_id}/schedules")
-def create_schedule(study_id: int):
-    raise HTTPException(
-        status_code=501,
-        detail="일정 등록 기능 구현 예정",
-    )
-
-
-# 스터디 일정 수정
-# PUT /studies/1/schedules/2
-@router.put("/{study_id}/schedules/{schedule_id}")
-def update_schedule(study_id: int, schedule_id: int):
-    raise HTTPException(
-        status_code=501,
-        detail="일정 수정 기능 구현 예정",
-    )
-
-
-# 스터디 일정 삭제
-# DELETE /studies/1/schedules/2
-@router.delete("/{study_id}/schedules/{schedule_id}")
-def delete_schedule(study_id: int, schedule_id: int):
-    raise HTTPException(
-        status_code=501,
-        detail="일정 삭제 기능 구현 예정",
-    )
+@router.delete("/{study_id}/schedules/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_schedule(study_id: PositiveId, schedule_id: PositiveId, db: Database, current_user: CurrentUser):
+    service.delete_schedule(db, study_id, schedule_id, current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
