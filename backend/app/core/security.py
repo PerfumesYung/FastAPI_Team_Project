@@ -15,9 +15,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 #Swagger UI 연동 및 Authorization Bearer 헤더 추출
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
 
-SECRET_KEY = getattr(settings, "SECRET_KEY", "YOUR_SECRET_KEY_MUST_BE_OVER_32_BYTES_LONG")
+SECRET_KEY = getattr(settings, "SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  #인증 토큰 30분 만료 적용
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  #인증 토큰 60분 만료 적용
 
 def verify_password(password: str, hashed_password: str) -> bool:
     #사용자가 입력한 pwd와 DB의 해시 pwd가 일치하는지 검증
@@ -30,7 +30,7 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     #현재 시간으로부터 1시간 뒤 만료 되게 설정
-    expire = datetime.utcnow() + timedelta(hours=1)
+    expire = datetime.utcnow() + timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     
     #지정된 secret_key와 알고리즘으로 암호화해서 반환
