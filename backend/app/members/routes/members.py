@@ -1,5 +1,21 @@
-from fastapi import APIRouter, HTTPException
+"""
+로그인 사용자 의존성은 `app.core.security.get_current_user`가 완성되면
+import를 같은 형태로 교체합니다.
+(임시 의존성으로 현재 사용자 id를 받습니다.)
+"""
 
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
+
+from app.db.database import get_db
+from app.members.schemas.member import MemberResponse, MyStudyListResponse, ParticipantListResponse
+from app.members.services import build_my_study_list, build_participant_list, join_study, leave_study
+from app.members.temp_auth import get_current_user_id
+
+# OpenAPI에 표시할 오류 응답 명세
+NOT_FOUND = {"description": "스터디 또는 참가 기록이 없음"}
+CLOSED = {"description": "모집이 마감된 스터디"}
+CONFLICT = {"description": "중복 참가 또는 정원 초과"}
 
 # 스터디 참가 관련 경로
 router = APIRouter(
@@ -15,40 +31,63 @@ my_studies_router = APIRouter(
 
 
 # 스터디 참가
-# POST /studies/1/members
-@router.post("/{study_id}/members")
-def join_study(study_id: int):
-    raise HTTPException(
-        status_code=501,
-        detail="스터디 참가 기능 구현 예정",
-    )
+# POST /studies/{study_id}/members
+@router.post(
+    "/{study_id}/members",
+    response_model=MemberResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_404_NOT_FOUND: NOT_FOUND,
+        status.HTTP_400_BAD_REQUEST: CLOSED,
+        status.HTTP_409_CONFLICT: CONFLICT,
+    },
+)
+def add_study_member(
+    study_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    return join_study(db, study_id, user_id)
 
 
 # 내 참가 취소
-# DELETE /studies/1/members/me
-@router.delete("/{study_id}/members/me")
-def leave_study(study_id: int):
-    raise HTTPException(
-        status_code=501,
-        detail="스터디 참가 취소 기능 구현 예정",
-    )
+# DELETE /studies/{study_id}/members/me
+@router.delete(
+    "/{study_id}/members/me",
+    response_model=MemberResponse,
+    responses={
+        status.HTTP_404_NOT_FOUND: NOT_FOUND,
+        status.HTTP_401_UNAUTHORIZED: {"description": "로그인 필요"},
+    },
+)
+def remove_my_study_member(
+    study_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    return leave_study(db, study_id, user_id)
 
 
 # 스터디 참가자 목록
-# GET /studies/1/members
-@router.get("/{study_id}/members")
-def read_study_members(study_id: int):
-    raise HTTPException(
-        status_code=501,
-        detail="참가자 목록 조회 기능 구현 예정",
-    )
+# GET /studies/{study_id}/members
+@router.get(
+    "/{study_id}/members",
+    response_model=ParticipantListResponse,
+    responses={status.HTTP_404_NOT_FOUND: NOT_FOUND},
+)
+def read_study_members(study_id: int, db: Session = Depends(get_db)):
+    return build_participant_list(db, study_id)
 
 
 # 내가 참가한 스터디 목록
 # GET /users/me/studies
-@my_studies_router.get("/studies")
-def read_my_studies():
-    raise HTTPException(
-        status_code=501,
-        detail="내 참가 스터디 조회 기능 구현 예정",
-    )
+@my_studies_router.get(
+    "/studies",
+    response_model=MyStudyListResponse,
+    responses={status.HTTP_401_UNAUTHORIZED: {"description": "로그인 필요"}},
+)
+def read_my_studies(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    return build_my_study_list(db, user_id)
