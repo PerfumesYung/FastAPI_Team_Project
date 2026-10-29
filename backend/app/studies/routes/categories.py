@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException
-
+from fastapi import APIRouter, Depends, Response
+from sqlalchemy.orm import Session
+from app.db.database import get_db
+from app.studies.models.category import StudyCategory
+from app.studies.schemas.category import StudyCategoryCreate
+from sqlalchemy.future import select
 
 router = APIRouter(
     prefix="/categories",
@@ -9,9 +13,8 @@ router = APIRouter(
 
 # 카테고리 목록 조회
 # GET /categories
-@router.get("")
-def read_categories():
-    raise HTTPException(
-        status_code=501,
-        detail="카테고리 조회 기능 구현 예정",
-    )
+@router.get("", response_model=list[StudyCategoryCreate])
+def read_categories(db: Session= Depends(get_db)):
+    db_study_categories = select(StudyCategory).order_by(StudyCategory.id)
+    return db.scalars(db_study_categories).all()
+
