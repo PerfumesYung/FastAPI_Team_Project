@@ -13,10 +13,10 @@ router = APIRouter()
 def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     # 이메일 중복 거절 확인
     if db.query(User).filter(User.email == user_in.email).first():
-        raise HTTPException(status_code=409, detail="이미 존재하는 이메일 계정입니다. (409 Conflict)")
+        raise HTTPException(status_code=409, detail="이미 존재하는 이메일 계정입니다.")
     # 사용자명 중복 거절 확인
     if db.query(User).filter(User.username == user_in.username).first():
-        raise HTTPException(status_code=409, detail="이미 사용 중인 사용자명입니다. (409 Conflict)")
+        raise HTTPException(status_code=409, detail="이미 사용 중인 사용자명입니다.")
 
     db_user = User(
         email=user_in.email,
@@ -35,7 +35,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     
     # 계정이 없거나 암호 대조 결과가 올바르지 않은 경우 (401 에러 거절 지침 구현)
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다. (401 Unauthorized)")
+        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다.")
         
     return {"access_token": create_access_token(data={"sub": user.email}), "token_type": "bearer"}
 
