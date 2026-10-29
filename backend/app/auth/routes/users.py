@@ -1,44 +1,44 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
+from app.db.database import get_db
+from app.auth.models import User
+from app.auth.schemas import UserCreate, UserRead, Token
+from app.auth.security import get_password_hash, verify_password, create_access_token, get_current_user
 
-# /users로 시작하는 회원 관련 경로
-router = APIRouter(
-    prefix="/users",
-    tags=["회원"],
-)
+router = APIRouter()
 
-# /auth로 시작하는 인증 관련 경로
-auth_router = APIRouter(
-    prefix="/auth",
-    tags=["인증"],
-)
+@router.post("/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+def signup(user_in: UserCreate, db: Session = Depends(get_db)):
+    # 이메일 중복 거절 확인
+    if db.query(User).filter(User.email == user_in.email).first():
+        raise HTTPException(status_code=409, detail="이미 존재하는 이메일 계정입니다. (409 Conflict)")
+    # 사용자명 중복 거절 확인
+    if db.query(User).filter(User.username == user_in.username).first():
+        raise HTTPException(status_code=409, detail="이미 사용 중인 사용자명입니다. (409 Conflict)")
 
-
-# 회원가입
-# POST /users
-@router.post("")
-def create_user():
-    raise HTTPException(
-        status_code=501,
-        detail="회원가입 기능 구현 예정",
+    db_user = User(
+        email=user_in.email,
+        username=user_in.username,
+        hashed_password=get_password_hash(user_in.password), # 비밀번호 암호화 저장
+        role="USER"
     )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
+@router.post("/auth/token", response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == form_data.username).first()
+    
+    # 계정이 없거나 암호 대조 결과가 올바르지 않은 경우 (401 에러 거절 지침 구현)
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다. (401 Unauthorized)")
+        
+    return {"access_token": create_access_token(data={"sub": user.email}), "token_type": "bearer"}
 
-# 내 정보 조회
-# GET /users/me
-@router.get("/me")
-def read_my_info():
-    raise HTTPException(
-        status_code=501,
-        detail="내 정보 조회 기능 구현 예정",
-    )
-
-
-# 로그인 및 토큰 발급
-# POST /auth/token
-@auth_router.post("/token")
-def login():
-    raise HTTPException(
-        status_code=501,
-        detail="로그인 기능 구현 예정",
-    )
+@router.get("/users/me", response_model=UserRead)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user

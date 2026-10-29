@@ -5,6 +5,7 @@ from app.auth.routes import users
 from app.studies.routes import studies, categories
 from app.members.routes import members
 from app.schedules.routes import schedules
+from app.auth import auth_router
 
 
 # FastAPI 앱 생성
