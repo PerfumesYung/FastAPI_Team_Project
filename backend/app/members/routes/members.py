@@ -1,7 +1,5 @@
-"""
-로그인 사용자 의존성은 `app.core.security.get_current_user`가 완성되면
-import를 같은 형태로 교체합니다.
-(임시 의존성으로 현재 사용자 id를 받습니다.)
+"""공통 JWT 인증으로 로그인 사용자를 확인하고,
+사용자 번호(current_user.id)를 참가 서비스에 전달합니다.
 """
 
 from fastapi import APIRouter, Depends, status
@@ -10,7 +8,8 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.members.schemas.member import MemberResponse, MyStudyListResponse, ParticipantListResponse
 from app.members.services import build_my_study_list, build_participant_list, join_study, leave_study
-from app.members.temp_auth import get_current_user_id
+from app.auth.models.user import User
+from app.core.security import get_current_user
 
 # OpenAPI에 표시할 오류 응답 명세
 NOT_FOUND = {"description": "스터디 또는 참가 기록이 없음"}
@@ -44,10 +43,10 @@ my_studies_router = APIRouter(
 )
 def add_study_member(
     study_id: int,
-    user_id: int = Depends(get_current_user_id),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return join_study(db, study_id, user_id)
+    return join_study(db, study_id, current_user.id)
 
 
 # 내 참가 취소
@@ -62,10 +61,10 @@ def add_study_member(
 )
 def remove_my_study_member(
     study_id: int,
-    user_id: int = Depends(get_current_user_id),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return leave_study(db, study_id, user_id)
+    return leave_study(db, study_id, current_user.id)
 
 
 # 스터디 참가자 목록
@@ -87,7 +86,7 @@ def read_study_members(study_id: int, db: Session = Depends(get_db)):
     responses={status.HTTP_401_UNAUTHORIZED: {"description": "로그인 필요"}},
 )
 def read_my_studies(
-    user_id: int = Depends(get_current_user_id),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return build_my_study_list(db, user_id)
+    return build_my_study_list(db, current_user.id)
