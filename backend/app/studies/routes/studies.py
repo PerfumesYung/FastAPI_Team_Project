@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Response
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.studies.schemas.study import StudyCreate, StudyResponse, StudyUpdate
@@ -15,8 +17,14 @@ router = APIRouter(
 # 스터디 목록 조회
 # GET /studies
 @router.get("", response_model=list[StudyResponse])
-def read_studies(db:Session=Depends(get_db)):
-    return StudyService.get_studies(db)
+def read_studies(
+    db: Session = Depends(get_db),
+    keyword: str | None = Query(None, min_length=1, max_length=150, description="제목·소개 검색어"),
+    category_id: int | None = Query(None, gt=0, description="카테고리 번호"),
+    status: Literal["OPEN", "CLOSED"] | None = Query(None, description="모집 상태"),
+):
+    # Query를 생략하면 기존처럼 전체 목록을 반환합니다.
+    return StudyService.get_studies(db, keyword, category_id, status)
 
 # 스터디 생성
 # POST /studies 

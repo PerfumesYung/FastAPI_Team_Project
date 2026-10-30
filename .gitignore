@@ -3,6 +3,8 @@
 !.env.example
 .venv/
 venv/
+# 팀원이 사용한 Windows 가상환경 폴더
+/fastapi/
 __pycache__/
 *.py[cod]
 *.db
