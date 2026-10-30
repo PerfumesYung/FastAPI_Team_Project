@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.studies.models.category import StudyCategory
@@ -9,9 +10,27 @@ from app.studies.schemas.study import StudyCreate, StudyUpdate
 class StudyService:
     # 스터디 목록 조회
     @staticmethod
-    def get_studies(db: Session):
-        db_studylist= db.query(StudyGroup).all()
-        return db_studylist
+    def get_studies(
+        db: Session,
+        keyword: str | None = None,
+        category_id: int | None = None,
+        status: str | None = None,
+    ):
+        query = db.query(StudyGroup)
+
+        # 검색어는 제목 또는 소개에서 찾고, 여러 필터는 AND로 조합합니다.
+        if keyword and keyword.strip():
+            word = keyword.strip()
+            query = query.filter(or_(
+                StudyGroup.title.contains(word, autoescape=True),
+                StudyGroup.description.contains(word, autoescape=True),
+            ))
+        if category_id is not None:
+            query = query.filter(StudyGroup.category_id == category_id)
+        if status is not None:
+            query = query.filter(StudyGroup.status == status)
+
+        return query.order_by(StudyGroup.id).all()
 
     # 스터디 상세 조회
     @staticmethod

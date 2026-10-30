@@ -15,7 +15,6 @@ app = FastAPI(
 
 # 회원·인증
 app.include_router(users.router)
-app.include_router(users.auth_router)
 
 # 스터디·카테고리
 app.include_router(studies.router)
