@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.studies.schemas.study import StudyCreate, StudyResponse, StudyUpdate
 from app.studies.service import StudyService
-#get_current_user 따로 import필요 (User 객체반환)
-#from app.core.security import get_current 
+from app.core.security import get_current_user
 
 
 router = APIRouter(
